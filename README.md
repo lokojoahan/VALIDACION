@@ -1,29 +1,29 @@
-# 🛡️ Sistema de Validación de CURP con OCR
+# Sistema de Validación de CURP con OCR
 
 > **Plan Valida México** — Sistema inteligente de validación cruzada de documentos CURP con reconocimiento óptico de caracteres (OCR), extracción de datos y registro ciudadano.
 
 ![Estado](https://img.shields.io/badge/Estado-Producción-brightgreen)
 ![Frontend](https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-blue)
 ![Backend](https://img.shields.io/badge/Backend-Python%20Flask-yellow)
-![Base%20de%20Datos](https://img.shields.io/badge/BD-MySQL%20(Neubox)-orange)
+![Base de Datos](https://img.shields.io/badge/BD-MySQL%20(Neubox)-orange)
 
 ---
 
-## 📋 Tabla de Contenidos
+## Tabla de Contenidos
 
-- [Descripción General](#-descripción-general)
-- [Arquitectura del Sistema](#-arquitectura-del-sistema)
-- [Tecnologías Utilizadas](#-tecnologías-utilizadas)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Instalación y Configuración](#-instalación-y-configuración)
-- [Pipeline de Validación](#-pipeline-de-validación)
-- [API REST (Backend)](#-api-rest-backend)
-- [Despliegue en Producción](#-despliegue-en-producción)
-- [Funcionalidades Principales](#-funcionalidades-principales)
+- [Descripción General](#descripción-general)
+- [Arquitectura del Sistema](#arquitectura-del-sistema)
+- [Tecnologías Utilizadas](#tecnologías-utilizadas)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Instalación y Configuración](#instalación-y-configuración)
+- [Pipeline de Validación](#pipeline-de-validación)
+- [API REST (Backend)](#api-rest-backend)
+- [Despliegue en Producción](#despliegue-en-producción)
+- [Funcionalidades Principales](#funcionalidades-principales)
 
 ---
 
-## 📖 Descripción General
+## Descripción General
 
 Este sistema permite **registrar ciudadanos mexicanos** validando su identidad de forma automática mediante la carga de su documento CURP oficial (PDF). El sistema:
 
@@ -35,11 +35,11 @@ Este sistema permite **registrar ciudadanos mexicanos** validando su identidad d
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El proyecto se compone de dos módulos independientes que trabajan juntos:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    FRONTEND (cPanel/Neubox)                  │
 │                                                             │
@@ -74,7 +74,7 @@ El proyecto se compone de dos módulos independientes que trabajan juntos:
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 ### Frontend
 | Tecnología | Uso |
@@ -104,33 +104,33 @@ El proyecto se compone de dos módulos independientes que trabajan juntos:
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
-```
+```text
 VALIDACION/
 │
-├── 📄 README.md                    # Este archivo
+├── README.md                       # Este archivo
 │
-├── 📂 frontend/                    # Código del frontend (se despliega en cPanel)
-│   ├── 📂 public/
-│   │   ├── 📄 index.html           # Página principal (SPA)
-│   │   ├── 📂 css/
-│   │   │   └── 📄 styles.css       # Estilos globales (tema oscuro, glassmorphism)
-│   │   └── 📂 js/
-│   │       ├── 📄 app.js           # Orquestador: DOM, eventos, API calls, extracción
-│   │       └── 📄 validator.js     # Motor de validación: OCR, fuzzy matching, CURP
+├── frontend/                       # Código del frontend (se despliega en cPanel)
+│   ├── public/
+│   │   ├── index.html              # Página principal (SPA)
+│   │   ├── css/
+│   │   │   └── styles.css          # Estilos globales (tema oscuro, glassmorphism)
+│   │   └── js/
+│   │       ├── app.js              # Orquestador: DOM, eventos, API calls, extracción
+│   │       └── validator.js        # Motor de validación: OCR, fuzzy matching, CURP
 │   │
-│   ├── 📄 server.js                # Servidor Express local (desarrollo)
-│   ├── 📄 package.json             # Dependencias de Node.js
-│   └── 📄 database.json            # BD local en JSON (solo desarrollo)
+│   ├── server.js                   # Servidor Express local (desarrollo)
+│   ├── package.json                # Dependencias de Node.js
+│   └── database.json               # BD local en JSON (solo desarrollo)
 │
-└── 📂 backend/                     # API REST en Flask (se ejecuta localmente + ngrok)
-    └── 📄 app.py                   # Servidor Flask: endpoints, BD MySQL, manejo de PDFs
+└── backend/                        # API REST en Flask (se ejecuta localmente + ngrok)
+    └── app.py                      # Servidor Flask: endpoints, BD MySQL, manejo de PDFs
 ```
 
 ---
 
-## ⚙️ Instalación y Configuración
+## Instalación y Configuración
 
 ### Requisitos Previos
 
@@ -163,7 +163,6 @@ cd backend
 # Crear entorno virtual (recomendado)
 python -m venv venv
 venv\Scripts\activate       # Windows
-# source venv/bin/activate  # Linux/Mac
 
 # Instalar dependencias
 pip install flask flask-cors pymysql pytesseract pymupdf pillow
@@ -187,7 +186,7 @@ const API_BASE = 'https://tu-url-ngrok.ngrok-free.app';
 
 ---
 
-## 🔍 Pipeline de Validación
+## Pipeline de Validación
 
 El sistema ejecuta un pipeline de 4 pasos para cada documento cargado:
 
@@ -203,8 +202,8 @@ Se utilizan expresiones regulares para identificar los campos del documento ofic
 
 | Campo | Patrón de Búsqueda |
 |---|---|
-| **CURP** | Regex oficial: `[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d` |
-| **Nombre(s)** | `NOMBRE(S): <valor>` hasta la siguiente etiqueta |
+| **CURP** | Regex oficial |
+| **Nombre(s)** | `NOMBRE(S): <valor>` |
 | **Primer Apellido** | `PRIMER APELLIDO: <valor>` |
 | **Segundo Apellido** | `SEGUNDO APELLIDO: <valor>` |
 
@@ -219,39 +218,9 @@ Se utilizan expresiones regulares para identificar los campos del documento ofic
    - Si la cantidad de palabras no coincide, **rechaza automáticamente** (ej: "JOSUE" vs "JOAHAN JOSUE").
    - Para OCR, tolera errores de Levenshtein por palabra (≤1 para palabras cortas, ≤2 para largas).
 
-3. **Validación Estructural de CURP:**
-   - Verifica que las iniciales de la CURP correspondan al nombre y apellidos ingresados.
-
-4. **Detección de Documento Incorrecto:**
-   - Rechaza automáticamente si se sube un Acta de Nacimiento en lugar de la CURP.
-
-### Flujo de Resultados
-
-```
-   ¿CURP coincide?
-        │
-   NO ──┤──── ❌ Rechazado: "CURP no coincide"
-        │
-       SÍ
-        │
-   ¿Nombres coinciden?
-        │
-   NO ──┤──── ❌ Rechazado: "Datos no coinciden" + detalle de discrepancias
-        │
-       SÍ
-        │
-   ¿Estructura CURP válida?
-        │
-   NO ──┤──── ⚠️ Advertencia (no bloquea)
-        │
-       SÍ
-        │
-   ✅ Validación Exitosa → "Listo para Registrar"
-```
-
 ---
 
-## 🌐 API REST (Backend)
+## API REST (Backend)
 
 ### Endpoints Principales
 
@@ -259,73 +228,24 @@ Se utilizan expresiones regulares para identificar los campos del documento ofic
 |---|---|---|
 | `GET` | `/api/citizens` | Lista todos los ciudadanos registrados |
 | `POST` | `/api/citizens/register` | Registra un ciudadano (con PDF adjunto) |
-| `DELETE` | `/api/citizens/<id>` | Elimina un ciudadano por ID |
-| `POST` | `/api/citizens/reset` | Resetea toda la base de datos |
 | `GET` | `/api/evidencias` | Lista todas las evidencias de rechazo |
 | `GET` | `/api/evidencias/download/<id>` | Descarga el PDF de una evidencia |
-| `DELETE` | `/api/evidencias/clear` | Limpia la tabla de evidencias |
-
-### Ejemplo: Registrar un Ciudadano
-
-```bash
-curl -X POST https://tu-ngrok.app/api/citizens/register \
-  -F "nombre=JOAHAN JOSUE" \
-  -F "primerApellido=CRUZ" \
-  -F "segundoApellido=MANCILLA" \
-  -F "curp=CUMJ040221HMNRNHA6" \
-  -F "status=Validado" \
-  -F "pdfFile=@./CURP.pdf"
-```
-
-### Estructura de la Base de Datos
-
-#### Tabla `ciudadanos`
-| Columna | Tipo | Descripción |
-|---|---|---|
-| `id` | INT (PK) | Identificador único |
-| `nombre` | VARCHAR(100) | Nombre(s) del ciudadano |
-| `primer_apellido` | VARCHAR(100) | Primer apellido |
-| `segundo_apellido` | VARCHAR(100) | Segundo apellido |
-| `curp` | VARCHAR(18) | Clave CURP de 18 caracteres |
-| `status` | ENUM | `Validado` o `Rechazado` |
-| `reason` | TEXT | Motivo del resultado |
-| `details_json` | TEXT | Detalles de la validación en JSON |
-| `archivo_pdf` | MEDIUMBLOB | PDF subido almacenado en binario |
-| `nombre_archivo` | VARCHAR(255) | Nombre original del archivo |
-| `created_at` | DATETIME | Fecha de registro |
-
-#### Tabla `registro_rechazos`
-| Columna | Tipo | Descripción |
-|---|---|---|
-| `id` | INT (PK) | Identificador único |
-| `citizen_id` | INT | ID del ciudadano rechazado |
-| `fecha` | DATETIME | Fecha del rechazo |
-| `nombre_completo` | VARCHAR(255) | Nombre completo que se intentó registrar |
-| `curp_ingresada` | VARCHAR(18) | CURP ingresada |
-| `motivo_rechazo` | TEXT | Motivo del rechazo |
-| `detalles_json` | TEXT | Detalles de validación en JSON |
-| `archivo_pdf` | MEDIUMBLOB | PDF subido como evidencia |
-| `nombre_archivo` | VARCHAR(255) | Nombre del archivo PDF |
 
 ---
 
-## 🚀 Despliegue en Producción
+## Despliegue en Producción
 
 ### Frontend → cPanel (Neubox)
 
 1. Acceder al **Administrador de Archivos** en cPanel.
 2. Navegar a `public_html/planvalida/`.
-3. Subir los archivos:
-   - `index.html` → raíz
-   - `css/styles.css` → carpeta `css/`
-   - `js/app.js` y `js/validator.js` → carpeta `js/`
+3. Subir los archivos de la carpeta `frontend/public`.
 4. Asegurarse de que `API_BASE` en `app.js` apunte a la URL de ngrok activa.
 
 ### Backend → Local + ngrok
 
 1. Ejecutar `python app.py` en la máquina local.
 2. Ejecutar `ngrok http 5000` para obtener la URL pública.
-3. Actualizar `API_BASE` en el frontend si cambió la URL de ngrok.
 
 ### URL de Producción
 
@@ -335,44 +255,6 @@ https://proyecto2.cegcontabilidad.com.mx/planvalida/
 
 ---
 
-## ✨ Funcionalidades Principales
-
-### 🔄 Autocompletado Inteligente
-Si el usuario sube un PDF **sin llenar el formulario**, el sistema extrae automáticamente los datos del documento y autocompleta los campos.
-
-### 🔁 Revalidación en Tiempo Real
-Si el usuario modifica un campo después de una validación exitosa, el sistema detecta el cambio y re-ejecuta la validación automáticamente.
-
-### 📊 Dashboard de Estadísticas
-Panel con conteo en tiempo real de ciudadanos validados, rechazados y total.
-
-### 📁 Repositorio de Evidencias
-Pestaña dedicada para consultar todos los registros rechazados con:
-- Nombre y CURP del intento.
-- Motivo del rechazo.
-- Fecha y hora.
-- Descarga del PDF original de evidencia.
-
-### 🎨 Interfaz Premium
-- Tema oscuro con glassmorphism.
-- Animaciones suaves y micro-interacciones.
-- Diseño responsive para desktop y móvil.
-- Stepper visual del pipeline de validación.
-
-### 🔐 Validación Robusta
-- Comparación estricta palabra por palabra de nombres.
-- Tolerancia a errores OCR con distancia de Levenshtein.
-- Validación estructural de la CURP según reglas de RENAPO.
-- Detección de documentos incorrectos (Acta de Nacimiento vs CURP).
-
----
-
-## 👥 Autores
+## Autores
 
 - **Joahan Josue Cruz Mancilla**
-
----
-
-## 📄 Licencia
-
-Este proyecto fue desarrollado como parte de la materia **Laboratorio de Paradigmas de Programación** - Proyecto 2.
