@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Runtime data
+evidencias/
+validos/
+scratch/
+repositorio_rechazados/
+
+# Test files
+test_curp.pdf
+test_regex.py
+test_val.js
+
+# Local database (development only)
+database.json

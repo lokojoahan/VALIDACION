@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlanValida - Sistema de Validación de CURP con OCR</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- PDF.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <!-- Tesseract.js library -->
+  <script src="https://unpkg.com/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
+</head>
+
+<body>
+
+  <!-- App Container -->
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="brand-text">
+          <h1>PlanValida</h1>
+          <span>Plan por México</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" id="btn-nav-citizens">
+          <i class="fa-solid fa-users"></i>
+          <span>Ciudadanos</span>
+        </a>
+        <a href="#" class="nav-item" id="btn-nav-evidences">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>Evidencias</span>
+          <span class="badge badge-error" id="evidence-count-badge">0</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="institution">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <div>
+            <p class="inst-title">UMSNH</p>
+            <p class="inst-sub">Firma Digital & OCR</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="welcome-text">
+          <h2>Validación y Registro de Ciudadanos</h2>
+          <p>Muestra de validación (10 registros iniciales) para Plan por México S.A. de C.V.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary" id="btn-reset-db"
+            title="Restablecer base de datos y limpiar archivos para liberar espacio">
+            <i class="fa-solid fa-rotate-left"></i> Restablecer Muestra
+          </button>
+          <button class="btn btn-primary" id="btn-add-citizen-modal">
+            <i class="fa-solid fa-user-plus"></i> Nuevo Ciudadano
+          </button>
+        </div>
+      </header>
+
+      <!-- Dashboard Stats Dashboard -->
+      <section class="stats-grid">
+        <div class="stat-card card-total">
+          <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Total Registrados</span>
+            <span class="stat-value" id="stat-total">0</span>
+          </div>
+        </div>
+        <div class="stat-card card-success">
+          <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Validados</span>
+            <span class="stat-value" id="stat-validated">0</span>
+          </div>
+        </div>
+        <div class="stat-card card-error">
+          <div class="stat-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Rechazados</span>
+            <span class="stat-value" id="stat-rejected">0</span>
+          </div>
+        </div>
+        <div class="stat-card card-pending">
+          <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Pendientes</span>
+            <span class="stat-value" id="stat-pending">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Section Tabs -->
+      <div class="content-wrapper">
+
+        <!-- Tab 1: Citizens View -->
+        <div class="tab-content active" id="tab-citizens">
+          <div class="content-card">
+            <div class="card-header">
+              <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-input" placeholder="Buscar ciudadano por nombre o CURP...">
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table" id="citizens-table">
+                <thead>
+                  <tr>
+                    <th>Nombre Completo</th>
+                    <th>CURP</th>
+                    <th>Estado de Registro</th>
+                    <th>Detalles / Observaciones</th>
+                    <th class="actions-col">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="citizens-list">
+                  <!-- Dynamic Content -->
+                  <tr>
+                    <td colspan="5" class="table-loading">
+                      <i class="fa-solid fa-circle-notch fa-spin"></i> Cargando ciudadanos...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Evidences View -->
+        <div class="tab-content" id="tab-evidences">
+          <div class="content-card">
+            <div class="card-header flex-header">
+              <h3>Historial de Evidencias de Rechazo</h3>
+              <button class="btn btn-danger btn-sm" id="btn-clear-evidences">
+                <i class="fa-solid fa-trash-can"></i> Vaciar Repositorio (Liberar Espacio)
+              </button>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Fecha y Hora</th>
+                    <th>Ciudadano</th>
+                    <th>CURP Capturada</th>
+                    <th>Motivo de Rechazo</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="evidences-list">
+                  <!-- Dynamic Content -->
+                  <tr>
+                    <td colspan="5" class="table-empty">
+                      No hay registros de documentos rechazados en el repositorio.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: REGISTRAR Y VALIDAR CIUDADANO -->
+  <div class="modal" id="modal-add-citizen">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>Registrar y Validar Ciudadano</h3>
+        <button class="close-modal" id="btn-close-add-modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="register-split-layout">
+
+          <!-- Column 1: Inputs & File Upload -->
+          <div class="register-col-inputs">
+            <h4
+              style="font-size: 15px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+              <i class="fa-solid fa-pen-to-square"></i> Datos de Captura</h4>
+            <form id="form-add-citizen" onsubmit="return false;">
+              <div class="form-grid-unified">
+                <div class="form-group">
+                  <label for="reg-nombre">Nombre(s) <span class="required">*</span></label>
+                  <input type="text" id="reg-nombre" required placeholder="Ej. Juan">
+                </div>
+                <div class="form-group">
+                  <label for="reg-primer-apellido">Primer Apellido <span class="required">*</span></label>
+                  <input type="text" id="reg-primer-apellido" required placeholder="Ej. Pérez">
+                </div>
+                <div class="form-group">
+                  <label for="reg-segundo-apellido">Segundo Apellido</label>
+                  <input type="text" id="reg-segundo-apellido" placeholder="Ej. Gómez">
+                </div>
+                <div class="form-group">
+                  <label for="reg-curp">CURP <span class="required">*</span></label>
+                  <input type="text" id="reg-curp" required placeholder="Ej. PEGJ800101HDFRMN01" maxlength="18"
+                    style="text-transform: uppercase;">
+                  <small class="form-help">Debe tener 18 caracteres alfanuméricos.</small>
+                </div>
+              </div>
+            </form>
+
+            <div class="alert alert-info hide" id="curp-match-hint">
+              <i class="fa-solid fa-lightbulb"></i> <span id="curp-hint-text"></span>
+            </div>
+
+            <h4
+              style="font-size: 15px; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+              <i class="fa-solid fa-file-arrow-up"></i> Carga de Documento CURP</h4>
+            <!-- Drag & Drop Zone -->
+            <div class="upload-stage" id="stage-upload">
+              <input type="file" id="file-input" accept="application/pdf" style="display: none;">
+              <div class="dropzone" id="dropzone">
+                <div class="dropzone-content">
+                  <i class="fa-solid fa-file-pdf file-icon" style="font-size: 36px; margin-bottom: 10px;"></i>
+                  <h4>Sube el archivo PDF de la CURP</h4>
+                  <p style="font-size: 12px; margin-bottom: 8px;">Arrastra y suelta o haz clic para buscar</p>
+                  <span class="file-restriction" style="font-size: 10px;">Solo formato PDF (.pdf)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Validation Status & OCR Progress -->
+          <div class="register-col-validation">
+            <h4
+              style="font-size: 15px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+              <i class="fa-solid fa-magnifying-glass-chart"></i> Análisis y Validación Cruzada</h4>
+
+            <!-- Placeholder before file is uploaded -->
+            <div class="validation-placeholder" id="val-placeholder">
+              <i class="fa-solid fa-microscope placeholder-icon"></i>
+              <p>Sube el documento PDF de la CURP para iniciar la validación por OCR en tiempo real.</p>
+            </div>
+
+            <!-- Processing Stage -->
+            <div class="processing-stage hide" id="stage-processing">
+              <div class="processing-card" style="padding: 0;">
+                <div class="processing-header" style="margin-bottom: 16px; text-align: center;">
+                  <i class="fa-solid fa-circle-notch fa-spin spinner-icon" style="font-size: 24px;"></i>
+                  <h5 id="processing-current-status" style="font-size: 13px; margin-top: 6px; color: var(--text-main);">
+                    Leyendo estructura del PDF...</h5>
+                </div>
+
+                <!-- Steps Progress indicators -->
+                <div class="steps-tracker" style="margin-bottom: 16px;">
+                  <div class="step-track-item" id="step-read">
+                    <div class="step-num"><i class="fa-solid fa-file-import"></i></div>
+                    <div class="step-text">Lectura</div>
+                  </div>
+                  <div class="step-track-item" id="step-type">
+                    <div class="step-num"><i class="fa-solid fa-code"></i></div>
+                    <div class="step-text">Tipo</div>
+                  </div>
+                  <div class="step-track-item" id="step-ocr">
+                    <div class="step-num"><i class="fa-solid fa-eye"></i></div>
+                    <div class="step-text">OCR</div>
+                  </div>
+                  <div class="step-track-item" id="step-logic">
+                    <div class="step-num"><i class="fa-solid fa-brain"></i></div>
+                    <div class="step-text">Cruce</div>
+                  </div>
+                </div>
+
+                <!-- OCR Progress Bar -->
+                <div class="progress-container hide" id="ocr-progress-container"
+                  style="margin-bottom: 16px; padding: 12px;">
+                  <div class="progress-labels">
+                    <span>Progreso OCR</span>
+                    <span id="ocr-progress-percent">0%</span>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="ocr-progress-fill" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <!-- Rendered PDF preview for scanned documents -->
+                <div class="ocr-preview-container hide" id="ocr-preview-container" style="padding: 8px;">
+                  <p class="preview-label" style="font-size: 11px; margin-bottom: 4px;"><i
+                      class="fa-solid fa-image"></i> Render de página:</p>
+                  <div class="canvas-wrapper" style="max-height: 120px;">
+                    <canvas id="pdf-render-canvas"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Result Stage -->
+            <div class="result-stage hide" id="stage-result">
+              <!-- Success view -->
+              <div class="result-banner success hide" id="result-success"
+                style="padding: 12px; margin-bottom: 16px; border-radius: var(--radius-md); text-align: center;">
+                <div class="result-icon-circle"
+                  style="width: 36px; height: 36px; font-size: 18px; margin-bottom: 6px; display: inline-flex; align-items: center; justify-content: center;">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <h4 style="font-size: 15px; margin-bottom: 2px;">¡Validación Exitosa!</h4>
+                <p style="font-size: 11px;">El documento coincide con los datos.</p>
+              </div>
+
+              <!-- Failure view -->
+              <div class="result-banner error hide" id="result-error"
+                style="padding: 12px; margin-bottom: 16px; border-radius: var(--radius-md); text-align: center;">
+                <div class="result-icon-circle"
+                  style="width: 36px; height: 36px; font-size: 18px; margin-bottom: 6px; display: inline-flex; align-items: center; justify-content: center;">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h4 style="font-size: 15px; margin-bottom: 2px;">Documento Rechazado</h4>
+                <p id="result-error-msg" style="font-size: 11px;"></p>
+              </div>
+
+              <!-- Comparison Block -->
+              <div class="comparison-block" style="margin-bottom: 16px;">
+                <h5
+                  style="background-color: rgba(0, 0, 0, 0.15); padding: 8px 12px; font-size: 11px; font-family: var(--font-display); border-bottom: 1px solid var(--border-color); text-transform: uppercase;">
+                  Comparación de Datos</h5>
+                <div class="comparison-grid">
+                  <div class="comp-column system-data"
+                    style="padding: 10px; border-right: 1px solid var(--border-color);">
+                    <h6
+                      style="font-size: 11px; margin-bottom: 8px; color: var(--text-muted); text-decoration: underline;">
+                      Capturado</h6>
+                    <div class="comp-field" style="margin-bottom: 6px;">
+                      <span class="field-label" style="font-size: 9px; color: var(--text-muted);">Nombre</span>
+                      <p class="field-val" id="comp-sys-name" style="font-size: 12px; font-weight: 500;">-</p>
+                    </div>
+                    <div class="comp-field" style="margin-bottom: 6px;">
+                      <span class="field-label" style="font-size: 9px; color: var(--text-muted);">Apellidos</span>
+                      <p class="field-val" id="comp-sys-ap1" style="font-size: 12px; font-weight: 500;">-</p>
+                    </div>
+                    <div class="comp-field" style="margin-bottom: 0;">
+                      <span class="field-label" style="font-size: 9px; color: var(--text-muted);">CURP</span>
+                      <p class="field-val highlight-val" id="comp-sys-curp"
+                        style="font-size: 12px; font-weight: 700; font-family: monospace; color: var(--accent-primary);">
+                        -</p>
+                    </div>
+                  </div>
+                  <div class="comp-column extracted-data" style="padding: 10px;">
+                    <h6
+                      style="font-size: 11px; margin-bottom: 8px; color: var(--text-muted); text-decoration: underline;">
+                      Extraído PDF</h6>
+                    <div class="comp-field" style="margin-bottom: 6px;">
+                      <span class="field-label" style="font-size: 9px; color: var(--text-muted);">Nombre</span>
+                      <p class="field-val" id="comp-ext-name" style="font-size: 12px; font-weight: 500;">-</p>
+                    </div>
+                    <div class="comp-field" style="margin-bottom: 6px;">
+                      <span class="field-label" style="font-size: 9px; color: var(--text-muted);">Apellidos</span>
+                      <p class="field-val" id="comp-ext-ap1" style="font-size: 12px; font-weight: 500;">-</p>
+                    </div>
+                    <div class="comp-field" style="margin-bottom: 0;">
+                      <span class="field-label" style="font-size: 9px; color: var(--text-muted);">CURP</span>
+                      <p class="field-val highlight-val" id="comp-ext-curp"
+                        style="font-size: 12px; font-weight: 700; font-family: monospace;">-</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Technical Details Panel -->
+              <div class="document-meta-panel" style="padding: 12px;">
+                <h5 style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">
+                  Metadatos Técnicos</h5>
+                <div class="meta-grid" style="grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px;">
+                  <div class="meta-item"
+                    style="font-size: 11px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color); display: flex; justify-content: space-between;">
+                    <span class="meta-label" style="color: var(--text-muted);">Tipo:</span>
+                    <span class="meta-val" id="doc-meta-type">-</span>
+                  </div>
+                  <div class="meta-item"
+                    style="font-size: 11px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color); display: flex; justify-content: space-between;">
+                    <span class="meta-label" style="color: var(--text-muted);">Acción:</span>
+                    <span class="meta-val" id="doc-meta-action">-</span>
+                  </div>
+                </div>
+
+                <div class="raw-text-panel" id="raw-text-panel">
+                  <div class="raw-text-header" onclick="toggleRawText()"
+                    style="padding: 6px 10px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <span><i class="fa-solid fa-list"></i> Texto Extraído</span>
+                    <i class="fa-solid fa-chevron-down" id="raw-text-toggle-icon"></i>
+                  </div>
+                  <pre class="raw-text-content hide" id="raw-text-content"
+                    style="font-size: 10px; max-height: 80px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; border: 1px solid var(--border-color); border-top: none; padding: 8px; margin: 0; background-color: rgba(0,0,0,0.2);"></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-add">Cancelar</button>
+        <button class="btn btn-secondary hide" id="btn-val-reset">Limpiar y Reintentar</button>
+        <button class="btn btn-success" id="btn-val-confirm" disabled>Confirmar Registro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- General Notification Toast -->
+  <div class="toast hide" id="app-toast">
+    <i class="fa-solid fa-circle-info toast-icon"></i>
+    <span class="toast-message" id="toast-message">Operación realizada con éxito</span>
+  </div>
+
+  <!-- Custom JS -->
+  <script src="js/validator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
