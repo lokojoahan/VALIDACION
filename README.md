@@ -258,3 +258,6 @@ https://proyecto2.cegcontabilidad.com.mx/planvalida/
 ## Autores
 
 - **Joahan Josue Cruz Mancilla**
+- **gustavo Perez Garduño**
+- **Ivan Montoya Barrera**
+- **Salvador Flores Galeana**
